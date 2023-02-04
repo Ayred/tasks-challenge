@@ -60,6 +60,9 @@ export default {
       },
     },
   },
+  env: {
+    myToken: process.env.MY_TOKEN || "ayred",
+  },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},

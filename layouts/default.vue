@@ -34,7 +34,7 @@ export default {
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: "Lista de Tareas",
+      title: "Gestor de Tareas",
     };
   },
 };
