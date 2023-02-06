@@ -13,26 +13,13 @@
             @click="showNewTask = false"
             :disabled="saving"
           >
-            <v-icon small color="white">mdi-times</v-icon>
+            <v-icon small color="white">mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-form ref="taskForm">
+        <v-form @submit.prevent="submit" ref="taskForm">
           <v-card-text>
             <div class="px-3">
               <v-row>
-                <v-col>
-                  <v-text-field
-                    :rules="[rules.required]"
-                    rounded
-                    outlined
-                    dense
-                    label="Token"
-                    v-model="task.token"
-                    type="number"
-                    hide-spin-buttons
-                  >
-                  </v-text-field>
-                </v-col>
                 <v-col>
                   <v-text-field
                     :rules="[rules.required]"
@@ -77,7 +64,7 @@
                     rounded
                     outlined
                     dense
-                    label="Fecha límite"
+                    label="Comentarios"
                     v-model="task.comments"
                     class="uppercase"
                   >
@@ -89,7 +76,7 @@
                     rounded
                     outlined
                     dense
-                    label="Fecha límite"
+                    label="Descripción"
                     v-model="task.description"
                     class="uppercase"
                   >
@@ -101,7 +88,7 @@
                     rounded
                     outlined
                     dense
-                    label="Fecha límite"
+                    label="Etiquetas"
                     v-model="task.tags"
                     class="uppercase"
                   >
@@ -168,22 +155,42 @@ export default {
       };
     },
     submit() {
-      this.$axios
-        .$post("/vdev/tasks-challenge/tasks", this.task)
-        .then((res) => {
-          if (res.retcode == 0) {
-            this.$store.commit("updateRefreshtasks", true);
-            this.showNewTask = false;
-          } else {
-            this.$alert(res.message, {
-              title: "AVISO",
-            });
-          }
-        })
-        .finally(() => {
-          this.saving = false;
-        });
-      this.saving = true;
+      if (this.$refs.taskForm && this.$refs.taskForm.validate()) {
+        let authorization =
+          "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
+
+        this.$axios
+          .post("/vdev/tasks-challenge/tasks", this.taskParams, {
+            headers: {
+              Authorization: `Bearer ${authorization}`,
+            },
+          })
+          .then((res) => {
+            console.log(res);
+            if (res.status == 201) {
+              this.$store.commit("updateRefreshTasks", true);
+              this.showNewTask = false;
+            } else {
+              alert(res.data.detail, {
+                title: "AVISO",
+              });
+            }
+          })
+          .finally(() => {
+            this.saving = false;
+          });
+        this.saving = true;
+        this.$refs.taskForm.reset();
+      }
+    },
+  },
+  computed: {
+    taskParams() {
+      const params = new URLSearchParams();
+      for (let key in this.task) {
+        params.append(key, this.task[key]);
+      }
+      return params;
     },
   },
 };

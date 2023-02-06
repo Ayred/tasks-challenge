@@ -5,7 +5,7 @@
         <v-col><h2>Listado de Tareas</h2> </v-col>
         <v-col class="text-right">
           <v-btn rounded depressed color="secondary" @click="newTask()">
-            <v-icon small>fa-plus</v-icon>
+            <v-icon small>mdi-plus</v-icon>
             &nbsp; Agregar nueva
           </v-btn>
         </v-col>
@@ -20,6 +20,22 @@
                   :items="tasks"
                   class="elevation-1"
                 >
+                  <template v-slot:[`item.actions`]="{ item }">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          small
+                          v-bind="attrs"
+                          v-on="on"
+                          class="mx-2"
+                          @click="taskDetails(item)"
+                        >
+                          mdi-eye
+                        </v-icon>
+                      </template>
+                      <span>Detalles de Tarea</span>
+                    </v-tooltip>
+                  </template>
                 </v-data-table>
               </template>
             </v-card-text>
@@ -32,6 +48,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 export default {
   data: () => ({
     headers: [
@@ -49,6 +66,17 @@ export default {
   }),
   created() {
     this.initialize();
+  },
+  watch: {
+    refreshTasks(val) {
+      if (val) {
+        this.initialize();
+        this.$store.commit("updateRefreshTasks", false);
+      }
+    },
+  },
+  computed: {
+    ...mapState(["refreshTasks"]),
   },
   methods: {
     initialize() {
