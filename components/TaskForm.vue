@@ -133,13 +133,13 @@ export default {
       rules: {
         //en este required hay que poner return porque puse llavecitas. retorna true o el texto
         required: (v) => {
-          return !!v || "Este campo es requerido";
+          return !!String(v) || "Este campo es requerido";
         },
       },
     };
   },
   methods: {
-    show() {
+    show(id) {
       if (this.$refs.taskForm) {
         this.$refs.taskForm.reset();
       }
@@ -153,14 +153,77 @@ export default {
         description: "",
         tags: "",
       };
+      if (id) {
+        let authorization =
+          "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
+
+        this.$axios
+          .get(
+            `/vdev/tasks-challenge/tasks/${id}?token=${process.env.myToken}`,
+            {
+              headers: {
+                Authorization: `Bearer ${authorization}`,
+              },
+            }
+          )
+          .then((res) => {
+            if (res) {
+              if (res.status == 200) {
+                this.showNewTask = true;
+                this.task = res.data[0];
+                return;
+              }
+            }
+          });
+      } else {
+        this.showNewTask = true;
+      }
     },
     submit() {
+      if (this.task.id) {
+        this.update();
+      } else {
+        this.create();
+      }
+    },
+
+    create() {
       if (this.$refs.taskForm && this.$refs.taskForm.validate()) {
         let authorization =
           "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
 
         this.$axios
           .post("/vdev/tasks-challenge/tasks", this.taskParams, {
+            headers: {
+              Authorization: `Bearer ${authorization}`,
+            },
+          })
+          .then((res) => {
+            console.log(res);
+            if (res.status == 201) {
+              this.$store.commit("updateRefreshTasks", true);
+              this.showNewTask = false;
+            } else {
+              alert(res.data.detail, {
+                title: "AVISO",
+              });
+            }
+          })
+          .finally(() => {
+            this.saving = false;
+          });
+        this.saving = true;
+        this.$refs.taskForm.reset();
+      }
+    },
+
+    update() {
+      if (this.$refs.taskForm && this.$refs.taskForm.validate()) {
+        let authorization =
+          "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
+
+        this.$axios
+          .put(`/vdev/tasks-challenge/tasks/${this.task.id}`, this.taskParams, {
             headers: {
               Authorization: `Bearer ${authorization}`,
             },

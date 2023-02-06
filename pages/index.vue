@@ -35,6 +35,20 @@
                       </template>
                       <span>Detalles de Tarea</span>
                     </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          small
+                          v-bind="attrs"
+                          v-on="on"
+                          class="mx-2"
+                          @click="deleteTask(item)"
+                        >
+                          mdi-trash-can
+                        </v-icon>
+                      </template>
+                      <span>Borrar Tarea</span>
+                    </v-tooltip>
                   </template>
                 </v-data-table>
               </template>
@@ -44,6 +58,7 @@
       </v-row>
     </v-col>
     <task-form ref="taskFormView"></task-form>
+    <delete-confirmation ref="deleteView"></delete-confirmation>
   </v-row>
 </template>
 
@@ -95,6 +110,12 @@ export default {
     },
     newTask() {
       this.$refs.taskFormView.show();
+    },
+    taskDetails(item) {
+      this.$refs.taskFormView.show(item.id);
+    },
+    deleteTask(item) {
+      this.$refs.deleteView.show(item.id);
     },
   },
 };
