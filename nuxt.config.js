@@ -40,6 +40,11 @@ export default {
 
   axios: {
     baseURL: "https://ecsdevapi.nextline.mx",
+    headers: {
+      common: {
+        Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
+      },
+    },
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify

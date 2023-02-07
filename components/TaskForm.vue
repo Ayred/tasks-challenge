@@ -20,7 +20,7 @@
           <v-card-text>
             <div class="px-3">
               <v-row>
-                <v-col>
+                <v-col class="pb-0">
                   <v-text-field
                     :rules="[rules.required]"
                     rounded
@@ -28,37 +28,40 @@
                     dense
                     label="Título"
                     v-model="task.title"
-                    class="uppercase"
+                    :disabled="readOnlyMode"
                   >
                   </v-text-field>
                 </v-col>
-                <v-col>
-                  <v-text-field
-                    :rules="[rules.required]"
-                    rounded
-                    outlined
-                    dense
-                    label="Estado"
+
+                <v-col cols="12" sm="6" md="3" class="pa-0 pb-0">
+                  <v-checkbox
                     v-model="task.is_completed"
-                    class="uppercase"
+                    :label="
+                      task.is_completed == 1 ? 'Completada' : 'No Completada'
+                    "
+                    :false-value="0"
+                    :true-value="1"
+                    color="orange"
+                    :disabled="readOnlyMode"
                   >
-                  </v-text-field>
+                  </v-checkbox>
                 </v-col>
               </v-row>
               <v-row>
-                <v-col>
+                <v-col cols="12" sm="6" md="3" class="pb-0">
                   <v-text-field
                     :rules="[rules.required]"
                     rounded
                     outlined
                     dense
+                    type="date"
                     label="Fecha límite"
                     v-model="task.due_date"
-                    class="uppercase"
+                    :disabled="readOnlyMode"
                   >
                   </v-text-field>
                 </v-col>
-                <v-col>
+                <v-col class="pb-0">
                   <v-text-field
                     :rules="[rules.required]"
                     rounded
@@ -66,23 +69,24 @@
                     dense
                     label="Comentarios"
                     v-model="task.comments"
-                    class="uppercase"
+                    :disabled="readOnlyMode"
                   >
                   </v-text-field>
                 </v-col>
-                <v-col>
-                  <v-text-field
+              </v-row>
+              <v-row>
+                <v-col cols="12" sm="12" class="pb-0">
+                  <v-textarea
                     :rules="[rules.required]"
-                    rounded
                     outlined
-                    dense
+                    rounded
                     label="Descripción"
                     v-model="task.description"
-                    class="uppercase"
+                    :disabled="readOnlyMode"
                   >
-                  </v-text-field>
+                  </v-textarea>
                 </v-col>
-                <v-col>
+                <v-col class="pb-0">
                   <v-text-field
                     :rules="[rules.required]"
                     rounded
@@ -90,7 +94,7 @@
                     dense
                     label="Etiquetas"
                     v-model="task.tags"
-                    class="uppercase"
+                    :disabled="readOnlyMode"
                   >
                   </v-text-field>
                 </v-col>
@@ -98,6 +102,16 @@
             </div>
           </v-card-text>
           <v-card-actions>
+            <v-btn
+              color="secondary"
+              depressed
+              rounded
+              type="button"
+              :disabled="saving"
+              v-show="readOnlyMode"
+              @click="readOnlyMode = false"
+              >Editar Tarea</v-btn
+            >
             <v-spacer></v-spacer>
             <v-btn
               color="default"
@@ -106,6 +120,7 @@
               type="button"
               @click="showNewTask = false"
               :disabled="saving"
+              v-show="!readOnlyMode"
               >Cancelar</v-btn
             >
             <v-btn
@@ -114,6 +129,7 @@
               rounded
               type="submit"
               :disabled="saving"
+              v-show="!readOnlyMode"
               >Confirmar</v-btn
             >
           </v-card-actions>
@@ -126,12 +142,11 @@
 export default {
   data() {
     return {
+      readOnlyMode: true,
       showNewTask: false,
-      title: "Nueva Tarea",
       saving: false,
       task: {},
       rules: {
-        //en este required hay que poner return porque puse llavecitas. retorna true o el texto
         required: (v) => {
           return !!String(v) || "Este campo es requerido";
         },
@@ -153,22 +168,14 @@ export default {
         description: "",
         tags: "",
       };
+      this.readOnlyMode = false;
       if (id) {
-        let authorization =
-          "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
-
         this.$axios
-          .get(
-            `/vdev/tasks-challenge/tasks/${id}?token=${process.env.myToken}`,
-            {
-              headers: {
-                Authorization: `Bearer ${authorization}`,
-              },
-            }
-          )
+          .get(`/vdev/tasks-challenge/tasks/${id}?token=${process.env.myToken}`)
           .then((res) => {
             if (res) {
               if (res.status == 200) {
+                this.readOnlyMode = true;
                 this.showNewTask = true;
                 this.task = res.data[0];
                 return;
@@ -180,70 +187,48 @@ export default {
       }
     },
     submit() {
+      if (!this.$refs.taskForm || !this.$refs.taskForm.validate()) {
+        return;
+      }
       if (this.task.id) {
         this.update();
       } else {
         this.create();
       }
+      this.saving = true;
+      this.$refs.taskForm.reset();
     },
 
     create() {
-      if (this.$refs.taskForm && this.$refs.taskForm.validate()) {
-        let authorization =
-          "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
-
-        this.$axios
-          .post("/vdev/tasks-challenge/tasks", this.taskParams, {
-            headers: {
-              Authorization: `Bearer ${authorization}`,
-            },
-          })
-          .then((res) => {
-            console.log(res);
-            if (res.status == 201) {
-              this.$store.commit("updateRefreshTasks", true);
-              this.showNewTask = false;
-            } else {
-              alert(res.data.detail, {
-                title: "AVISO",
-              });
-            }
-          })
-          .finally(() => {
-            this.saving = false;
-          });
-        this.saving = true;
-        this.$refs.taskForm.reset();
-      }
+      this.$axios
+        .post("/vdev/tasks-challenge/tasks", this.taskParams)
+        .then((res) => {
+          this.refreshTasks(res);
+        })
+        .finally(() => {
+          this.saving = false;
+        });
     },
 
     update() {
-      if (this.$refs.taskForm && this.$refs.taskForm.validate()) {
-        let authorization =
-          "e864a0c9eda63181d7d65bc73e61e3dc6b74ef9b82f7049f1fc7d9fc8f29706025bd271d1ee1822b15d654a84e1a0997b973a46f923cc9977b3fcbb064179ecd";
+      this.$axios
+        .put(`/vdev/tasks-challenge/tasks/${this.task.id}`, this.taskParams)
+        .then((res) => {
+          this.refreshTasks(res);
+        })
+        .finally(() => {
+          this.saving = false;
+        });
+    },
 
-        this.$axios
-          .put(`/vdev/tasks-challenge/tasks/${this.task.id}`, this.taskParams, {
-            headers: {
-              Authorization: `Bearer ${authorization}`,
-            },
-          })
-          .then((res) => {
-            console.log(res);
-            if (res.status == 201) {
-              this.$store.commit("updateRefreshTasks", true);
-              this.showNewTask = false;
-            } else {
-              alert(res.data.detail, {
-                title: "AVISO",
-              });
-            }
-          })
-          .finally(() => {
-            this.saving = false;
-          });
-        this.saving = true;
-        this.$refs.taskForm.reset();
+    refreshTasks(res) {
+      if (res.status == 201) {
+        this.$store.commit("updateRefreshTasks", true);
+        this.showNewTask = false;
+      } else {
+        alert(res.data.detail, {
+          title: "AVISO",
+        });
       }
     },
   },
@@ -254,6 +239,15 @@ export default {
         params.append(key, this.task[key]);
       }
       return params;
+    },
+    title() {
+      if (!this.task.id) {
+        return "Nueva Tarea";
+      }
+      if (this.readOnlyMode) {
+        return `Tarea #${this.task.id}`;
+      }
+      return `Editar Tarea #${this.task.id}`;
     },
   },
 };
