@@ -36,7 +36,16 @@ export default {
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
-  modules: [],
+  modules: ["@nuxtjs/axios"],
+
+  axios: {
+    baseURL: "https://ecsdevapi.nextline.mx",
+    headers: {
+      common: {
+        Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
+      },
+    },
+  },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
@@ -55,6 +64,9 @@ export default {
         },
       },
     },
+  },
+  env: {
+    myToken: process.env.MY_TOKEN || "ayred",
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
