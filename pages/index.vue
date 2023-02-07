@@ -20,6 +20,9 @@
                   :items="tasks"
                   class="elevation-1"
                 >
+                  <template v-slot:[`item.is_completed`]="{ item }">
+                    <span>{{ isCompleted(item.is_completed) }}</span>
+                  </template>
                   <template v-slot:[`item.actions`]="{ item }">
                     <v-tooltip top>
                       <template v-slot:activator="{ on, attrs }">
@@ -110,6 +113,9 @@ export default {
     },
     deleteTask(item) {
       this.$refs.deleteView.show(item.id);
+    },
+    isCompleted(val) {
+      return val == 1 ? "Completada" : "No completada";
     },
   },
 };
