@@ -6,7 +6,7 @@ export default {
 
   target: "static",
 
-  router: { base: "tasks-challenge" },
+  router: { base: "/tasks-challenge/" },
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
